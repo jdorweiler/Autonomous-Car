@@ -1,9 +1,13 @@
 // Sensors Modules
 
 int getGyroRate() {        // ARef=3.3V, Gyro sensitivity=2mV/(deg/sec)
-   GYR_Y = getGyroValues(); 
+   GYR_Y = getGyroValues();
+  
+  if (GYR_Y > 25000) {
+   GYR_Y = GYR_Y-65536;
+  } 
    
-   return int((GYR_Y)/(lastLoopUsefulTime));          
+   return int(-(GYR_Y)/21);          
 }
 
 float getAccAngle() {
@@ -22,15 +26,15 @@ float getAccAngle() {
 //Writes val to address register on device
 void writeTo(int device, byte address, byte val) {
    Wire.beginTransmission(device); //start transmission to device 
-   Wire.write(address);        // send register address
-   Wire.write(val);        // send value to write
+   Wire.send(address);        // send register address
+   Wire.send(val);        // send value to write
    Wire.endTransmission(); //end transmission
 }
 
 //reads num bytes starting from address register on device in to buff array
 void readFrom(int device, byte address, int num, byte buff[]) {
   Wire.beginTransmission(device); //start transmission to device 
-  Wire.write(address);        //sends address to read from
+  Wire.send(address);        //sends address to read from
   Wire.endTransmission(); //end transmission
   
   Wire.beginTransmission(device); //start transmission to device
@@ -39,7 +43,7 @@ void readFrom(int device, byte address, int num, byte buff[]) {
   int i = 0;
   while(Wire.available())    //device may send less than requested (abnormal)
   { 
-    buff[i] = Wire.read(); // receive a byte
+    buff[i] = Wire.receive(); // receive a byte
     i++;
   }
   Wire.endTransmission(); //end transmission
@@ -90,17 +94,17 @@ float getGyroValues(){
   byte yLSB = readRegister(gyroscope_Address, 0x2A);
   gy = ((yMSB << 8) | yLSB);
 
- // byte zMSB = readRegister(gyroscope_Address, 0x2D);
- // byte zLSB = readRegister(gyroscope_Address, 0x2C);
-//  gz = ((zMSB << 8) | zLSB);
+  byte zMSB = readRegister(gyroscope_Address, 0x2D);
+  byte zLSB = readRegister(gyroscope_Address, 0x2C);
+  gz = ((zMSB << 8) | zLSB);
   
-  return gy;
+  return gz;
 }
 
 void writeRegister(int deviceAddress, byte address, byte val) {
     Wire.beginTransmission(deviceAddress); // start transmission to device 
-    Wire.write(address);       // send register address
-    Wire.write(val);         // send value to write
+    Wire.send(address);       // send register address
+    Wire.send(val);         // send value to write
     Wire.endTransmission();     // end transmission
 }
 
@@ -108,7 +112,7 @@ int readRegister(int deviceAddress, byte address){
 
     int v;
     Wire.beginTransmission(deviceAddress);
-    Wire.write(address); // register to read
+    Wire.send(address); // register to read
     Wire.endTransmission();
 
     Wire.requestFrom(deviceAddress, 1); // read a byte
@@ -117,7 +121,7 @@ int readRegister(int deviceAddress, byte address){
         // waiting
     }
 
-    v = Wire.read();
+    v = Wire.receive();
     return v;
 }
 

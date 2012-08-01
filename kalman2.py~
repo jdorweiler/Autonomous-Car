@@ -1,9 +1,7 @@
 '''
-Reads in serial data from wireless transmitter data stream.  Parces the GPS, Velocity, Heading, and loop time.
+Reads in serial data from Xbee data stream.  Parces the GPS, Velocity, Heading, and loop time.
 The GPS position and velocity is sent through a Kalman filter (code adapted from the Kalman lecture CS373 by Prof. Thurn, Udacity.com) to update the cars position.  Calculates the azimuth heading and distance to a GPS waypoint
 '''
-import binascii
-import struct
 import serial
 from math import *
 import csv
@@ -146,7 +144,6 @@ class matrix:
 
 ########################################
 
-
 def filter(x, P):
     for n in range(len(measurements)):
         
@@ -193,11 +190,8 @@ def distance(lat1, lon1, lat2, lon2):
     a = sin(dlat/2)**2 + (cos(lat1) * cos(lat2) * sin(dlon/2)**2)
     c = 2*atan2(float(sqrt(a)),float(sqrt(1-a)))
     km = 6371 * c
-    return km
-
-def packIntegerAsULong(value):
-    """Packs a python 4 byte unsigned integer to an arduino unsigned long"""
-    return struct.pack('I', value)    #should check bounds 
+    return km 
+ 
 
 u = matrix([[0.], [0.], [0.], [0.]]) # external motion
 
@@ -223,15 +217,11 @@ initial_x = 0
 
 initial_y = 0
 
+waypoints = [40.50574,-74.432558]
 
-waypoints = [40.5887,-74.892211]
-
-port = "/dev/ttyUSB1"
-
-ser = serial.Serial(port, 57600, timeout = 3)
+ser = serial.Serial('/dev/ttyUSB0', 57600, timeout = 30)
 
 while True:
-        
         content = ser.readline()
         t = [int(i) for i in content.split(',')]
         print ' *****************'
@@ -243,7 +233,6 @@ while True:
         lon = -((lon/1000000)+(((lon/10000)%100)/60.)+((((lon/10000.)%1)*100)/3600))
         dt = t[2]
         heading = t[4]
-        steering = t[5]
         velx = (t[3]/2)*0.514444444 #assuming x and y have same velocity, m/s
         vely = velx
         
@@ -256,7 +245,7 @@ while True:
         
         x = matrix([[initial_x], [initial_y], [velx], [vely]])
         
-       # (initial_x, initial_y) = filter(x, P)
+        (initial_x, initial_y) = filter(x, P)
         
         print 'Updated position [lat,lon]  ', initial_x, ',', initial_y
         
@@ -267,11 +256,11 @@ while True:
         print 'Bearing to next waypoint    ' ,angle
         dist = distance(lat,lon,waypoints[0],waypoints[1])
         print 'Distance to waypoint        ', dist
-        print 'Steering from Arduino       ', steering
         print ' *****************'
-        ser.write(packIntegerAsULong(angle))
- 
-  
+        #ser.open()
+        #ser.write("angle")
+        
+
         
 
 
