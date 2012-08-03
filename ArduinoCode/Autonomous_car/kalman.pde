@@ -1,7 +1,4 @@
-#define DEBUG 1
-
 #define clamp360(x) ((((x) < 0) ? 360: 0) + fmod((x), 360))
-
 /*
  * Kalman Filter Setup
  */

@@ -9,9 +9,9 @@ static void gpsdump(TinyGPS &gps, float WayPt_Lat, float WayPt_Lon)
   localData[1] = flon*1000; //mutiply to get correct decimal number
   localData[2] = gps.f_course();
   localData[3] = gps.course_to(flat, flon, WayPt_Lat, WayPt_Lon);
-  localData[4] = float(gps.distance_between(flat, flon, WayPt_Lat, WayPt_Lon)/100); // divide by 10 to get actual number so this should be /1000
+  localData[4] = float(gps.distance_between(flat, flon, WayPt_Lat, WayPt_Lon)); //Distance to waypoint
   localData[5] = gps.f_speed_kmph();
-  localData[15] = 1; //new gps update
+  localData[16] = 1; //new gps update
 
 }  
 

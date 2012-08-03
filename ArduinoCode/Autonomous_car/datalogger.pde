@@ -6,7 +6,7 @@ void logger(){
   // if the file is available, write to it:
   if (dataFile) {
     
-      for ( int i = 0; i < 16; i = i + 1) {
+      for ( int i = 0; i < 17; i = i + 1) {
           dataFile.print(localData[i]); dataFile.print(" ");
            } 
       dataFile.println(" ");

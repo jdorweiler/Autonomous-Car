@@ -6,6 +6,9 @@
 #include <SD.h>
 #include <LiquidCrystal.h>
 
+const int buttonPin = 83;
+int buttonState = 0; 
+
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
@@ -37,7 +40,7 @@ TinyGPS gps;
 //Point where it switches from conservative to agressive 
 int gapDist=3;
 //Aggressive
-double aggK=0.8, aggKp=6, aggKi=1, aggKd=1; 
+double aggK=0.9, aggKp=7, aggKi=2, aggKd=1; 
 //Conservative
 double consK=0.6, consKp=3, consKi=1, consKd=1;
 
@@ -88,11 +91,32 @@ float WayPT_Lat,WayPT_Lon;
 double localData[20]; // Array holding localication data {lat,lon,wayptLat,wayptLon,currAngle,KalmanAngle,Setpoint,dist}
 float waypoints[5][5];// Array holding the waypoint coordinates
 
+
 void setup()
 {
-  Serial.begin(57600);
+//  Serial.begin(57600);
   Serial1.begin(9600);
   Wire.begin();
+     
+  // initialize the pushbutton pin as an input:
+  pinMode(buttonPin, INPUT);  
+  
+// **********************************************************
+  waypoints[0][0] = 40.589146;
+  waypoints[0][1] = -74.891619;
+  
+  waypoints[1][0] = 40.588955;
+  waypoints[1][1] = -74.891487;
+  
+  waypoints[2][0] = 40.588694;
+  waypoints[2][1] = -74.891345;
+  
+  waypoints[3][0] = 40.588445;
+  waypoints[3][1] = -74.891195;
+  
+  waypoints[4][0] = 40.589242;
+  waypoints[4][1] = -74.89168;
+//***********************************************************
   
 // LCD Startup screen  
   lcd.begin(16, 2);
@@ -104,7 +128,7 @@ void setup()
     // don't do anything more:
     return;
   }
-  Serial.println("card initialized.");
+ // Serial.println("card initialized.");
   
 //  Serial.println("Turning on the accelerometer");
   writeTo(ACC, 0x2D, 0);      
@@ -119,7 +143,8 @@ void setup()
 // Line marker for SD files  
   File dataFile = SD.open("datalog.txt", FILE_WRITE);
   dataFile.println("******************************************************************** ");
-  dataFile.close();
+  dataFile.close(); 
+  pinMode(53, OUTPUT); 
 
 // Servos and start up steering check      
   ser_esc.attach(8);
@@ -131,9 +156,6 @@ void setup()
   ser_steer.write(1800); delay(100);
   ser_steer.write(1500); ser_esc.write(1500);
    
-    pinMode(84, OUTPUT); 
-    pinMode(53, OUTPUT); 
-    
 // Wait for GPS signal to do anything 
   int i = 0;
   while (!feedgps()){
@@ -145,10 +167,20 @@ void setup()
     delay(1000);
   }
   lcd.clear();
-// Set starting coordinates
-
-  
-  Serial.println("********************************Started**************************************8");
+// This prints out data to the LCD and waits for a button push to start the car.  This way I can be sure
+// it starts out with good data
+  while(!buttonState == HIGH){
+    buttonState = digitalRead(buttonPin);
+    if (feedgps()){
+      gpsdump(gps,waypoints[0][0],waypoints[0][1]);
+      lcdPrint();
+    }
+    delay(100);
+  }
+// Reset to first waypoint just in case  
+  num = 0;
+//  Serial.println("********************************Started**************************************8");
+lcd.clear();
 }
 
 void loop()
@@ -166,7 +198,6 @@ void loop()
     break;
   }
   */ 
-
   bool newdata = false;
   unsigned long start = millis();
   
@@ -175,23 +206,18 @@ void loop()
   {
     if (feedgps()){
       newdata = true; 
-     
+      
+      waypoint(localData[4]);
      ///// Runs TinyGPS only when we have an update. Use the waypoint coordinates for distance and heading calculatons///
      gpsdump(gps,WayPT_Lat,WayPT_Lon);
     
      }
   }
-waypoint(num,localData[4]/10);
 
-  /// every 0.1sec we update the gyro sensor ////////////////
-  if (millis() - start < 50) {
-	  GYRO_rate = getGyroRate();
-          localData[7] = GYRO_rate;
+  GYRO_rate = getGyroRate();      
+  localData[7] = GYRO_rate;
   
-
-  }
-  
- // Initialize Kalman with the current angle if there's a new GPS or the previous angle if there isn't
+// Initialize Kalman with the current angle if there's a new GPS or the previous angle if there isn't
   headingKalmanInit(localData[2]);
       
 // Send current heading from gps and the gyro rate to Kalman filter 
@@ -224,8 +250,8 @@ waypoint(num,localData[4]/10);
     angleDiff = (angleDiff + 360);
    }
    
-localData[9] = angleDiff;
-
+  localData[9] = angleDiff;
+/*
 // Read in values for the PID pots first, Map to 0-10, Then store in array for printing and saving 
   sensorValue1 = map(analogRead(sensorPin1),0,1024,0,10);
   sensorValue2 = map(analogRead(sensorPin2),0,1024,0,10);
@@ -233,9 +259,10 @@ localData[9] = angleDiff;
   localData[12] = sensorValue1;
   localData[13] = sensorValue2;
   localData[14] = sensorValue3;
-
+*/
 // *********************** PID and motor drive *****************
-   double gap = abs(0-angleDiff); //distance away from setpoint
+  double gap = abs(0-angleDiff); //distance away from setpoint
+   
   if(gap<gapDist)
   {  //we're close to setpoint, use conservative tuning parameters
     steering = updatePid(0, angleDiff, consK, consKp, consKi, consKd);
@@ -247,24 +274,24 @@ localData[9] = angleDiff;
   }
    
 // Drive steering servo 
-driveSteering(-steering);
- 
-  for ( int i = 0; i < 16; i = i + 1) {
+  driveSteering(-steering);
+/* 
+  for ( int i = 0; i < 17; i = i + 1) {
           Serial.print(localData[i]); Serial.print(" ");
            } 
            Serial.println();
-
+*/
 // Print localData array to SD card ////
-logger();
+  logger();
 
 // Print to LCD ////
-lcdPrint();
+  lcdPrint();
 
 //reset gps update value 
-localData[15] = 0; 
+  localData[16] = 0; 
 
 
-  Serial.print(" "); Serial.print(millis()-start);Serial.println(" ");
+//  Serial.print(" "); Serial.print(millis()-start);Serial.println(" ");
   // *********************** loop timing control **************************
   lastLoopUsefulTime = millis()-loopStartTime;
   if(lastLoopUsefulTime<STD_LOOP_TIME)         delay(STD_LOOP_TIME-lastLoopUsefulTime);
