@@ -3,9 +3,9 @@
 
 void waypoint(float dist) {
   
-  if (dist < 5) {
+  if (dist < 3) {
     num = num + 1;
-    localData[15] = num;
+    localData[10] = num; // Store the current waypoint number for logging
   }
   
  WayPT_Lat = waypoints[num][0];

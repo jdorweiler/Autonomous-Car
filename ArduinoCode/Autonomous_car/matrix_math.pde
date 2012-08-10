@@ -1,3 +1,4 @@
+// Kalman and Matrix libraries are from www.bot-thoughts.com
 unsigned int matrix_error = 0;
 
 void Vector_Cross_Product(float C[3], float A[3], float B[3])

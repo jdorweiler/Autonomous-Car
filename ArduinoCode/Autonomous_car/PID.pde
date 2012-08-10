@@ -1,4 +1,4 @@
-// PID reused from the balancing robot.  Upgrade to arduino pid library?  
+// PID reused from the balancing robot
 #define   GUARD_GAIN   20.0
 int error = 0;  
 int last_error = 0;

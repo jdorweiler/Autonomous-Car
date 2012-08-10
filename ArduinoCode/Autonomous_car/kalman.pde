@@ -1,3 +1,4 @@
+// Kalman and Matrix libraries are from www.bot-thoughts.com
 #define clamp360(x) ((((x) < 0) ? 360: 0) + fmod((x), 360))
 /*
  * Kalman Filter Setup
@@ -8,8 +9,8 @@ static float A[4]={ 1, 0, 0, 1};            // State transition matrix; A[1] sho
 static float H[4]={ 1, 0, 0, 1 };           // Observer matrix maps measurements to state transition
 float K[4]={ 0, 0, 0, 0 };                  // Kalman gain
 static float P[4]={ 1000, 0, 0, 1000 };     // Covariance matrix
-static float R[4]={ 0.3, 0, 0, 0.05 };        // Measurement noise, hdg, hdg rate
-static float Q[4]={ 0.01, 0, 0, 0.01 };     // Process noise matrix
+static float R[4]={ 0.3, 0, 0, 0.3 };        // Measurement noise, hdg, hdg rate
+static float Q[4]={ 0.01, 0, 0, 0 };     // Process noise matrix
 static float I[4]={ 1, 0, 0, 1 };           // Identity matrix
 
 float kfGetX(int i)
