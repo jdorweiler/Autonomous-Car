@@ -1,7 +1,7 @@
 // Sensors Modules.  Gyroscope and Accelerometer
 
-float getGyroRate() {       
-  
+void getGyroRate() {   
+  gyroAngles[1] = 0;
   pastMillis = millis();
   int GYR_Y = getGyroValues();
   if (GYR_Y >= 25000) {
@@ -10,16 +10,13 @@ float getGyroRate() {
   GYR_Y = -GYR_Y;
   pastMicros = currMicros;
   currMicros = micros();
-// drift range for the gyro.  Experimentaly determined
-  if(GYR_Y >= 45 || GYR_Y <= -15)
-  {
-      dt = (float) (currMicros-pastMicros)/10000.0;
-      degreesPerSecond = (float)GYR_Y *0.00068 ; // this scale factor was determined mostly by trial and error
-      localData[4] += (degreesPerSecond) * dt;
+  // drift range for the gyro.  Experimentaly determined
+  if(GYR_Y >= 30 || GYR_Y <= -30){
+      dt = (float) (currMicros-pastMicros)/1000000.0;
+      gyroAngles[1] = GYR_Y *0.068 ; // this scale factor was determined mostly by trial and error
+     gyroAngles[0] +=  gyroAngles[1] * dt;
   }
-  gyroAngles[1] = degreesPerSecond;
-  gyroAngles[0] = gyroAngle; 
-  return 0.0;
+return;
 }
 
 float getAccAngle() {

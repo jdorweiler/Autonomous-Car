@@ -8,5 +8,6 @@ void lcdPrint() {
   lcd.print(localData[8]); // angleDiff sent to PID
   lcd.setCursor(9,1);
   lcd.print(localData[7]); // Distance in meters
+  return;
 }
 

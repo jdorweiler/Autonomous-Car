@@ -13,6 +13,6 @@ void logger(){
   else {
     Serial.println("error opening datalog.txt");
   } 
-
+return;
 }
 

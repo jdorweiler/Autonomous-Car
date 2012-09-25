@@ -15,7 +15,8 @@ LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 // CS pin for SD logging
 const int chipSelect = 53;
 
-
+int sdFlag = 0;
+int gpsFlag = 0;
 
 // Pots for manual adjustments//////////////////////////////////////////////////////////////
 int sensorPin1 = A8;
@@ -46,6 +47,8 @@ int num; //waypoint number
 float WayPT_Lat,WayPT_Lon;
 bool newGPSheading;
 unsigned long startDt;
+float gpsAvg[6];
+float gpsSum = 0.0;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -55,7 +58,7 @@ int gapDist=3;
 //Aggressive
 double aggK=0.9, aggKp=7, aggKi=4, aggKd=1; 
 //Conservative
-double consK=0.6, consKp=3, consKi=2, consKd=0.5;
+double consK=0.6, consKp=4, consKi=3, consKd=1;
 int steering;
 Servo ser_esc;
 Servo ser_steer;
@@ -111,116 +114,9 @@ void setup()
   Serial.begin(57600);
   Serial1.begin(9600);
   Wire.begin();
-     
-  // initialize the pushbutton pin as an input:
-  pinMode(buttonPin, INPUT);  
-//*****************************************************************  
-waypoints[0][0]=40.5869785;  waypoints[0][1]=-74.8901288;  
-waypoints[1][0]=40.5867896;  waypoints[1][1]=-74.8900319;  
-waypoints[2][0]=40.5866876;  waypoints[2][1]=-74.889993;  
-waypoints[3][0]=40.5866109;  waypoints[3][1]=-74.8899582;  
-waypoints[4][0]=40.586474;   waypoints[4][1]=-74.8899096;  
-waypoints[5][0]=40.5864558;  waypoints[5][1]=-74.8900184;  
-waypoints[6][0]=40.586437;   waypoints[6][1]=-74.8901498;  
-waypoints[7][0]=40.5864353;  waypoints[7][1]=-74.8902253;  
-waypoints[8][0]=40.5864269;  waypoints[8][1]=-74.8902731;  
-waypoints[9][0]=40.5864197;  waypoints[9][1]=-74.8903461;  
-waypoints[10][0]=40.5864067; waypoints[10][1]=-74.890442;  
-waypoints[11][0]=40.5863818; waypoints[11][1]=-74.8907024;  
-waypoints[12][0]=40.586349;  waypoints[12][1]=-74.8910185;  
-waypoints[13][0]=40.5863131; waypoints[13][1]=-74.8913619;  
-waypoints[14][0]=40.586293;  waypoints[14][1]=-74.8915772;  
-waypoints[15][0]=40.5862602; waypoints[15][1]=-74.8918713;  
-waypoints[16][0]=40.586239;  waypoints[16][1]=-74.8920325;  
-waypoints[17][0]=40.5862096; waypoints[17][1]=-74.8922463;  
-waypoints[18][0]=40.5862208; waypoints[18][1]=-74.8923703;  
-waypoints[19][0]=40.5862304; waypoints[19][1]=-74.8924291;  
-waypoints[20][0]=40.586267;  waypoints[20][1]=-74.8925109;  
-waypoints[21][0]=40.586328;  waypoints[21][1]=-74.8926005;  
-waypoints[22][0]=40.5865234; waypoints[22][1]=-74.8928368;  
-waypoints[23][0]=40.5866553; waypoints[23][1]=-74.8930042;  
-waypoints[24][0]=40.5867578; waypoints[24][1]=-74.893129;  
-waypoints[25][0]=40.586844;  waypoints[25][1]=-74.8932311;  
-waypoints[26][0]=40.5869495; waypoints[26][1]=-74.8933179;  
-waypoints[27][0]=40.5871612; waypoints[27][1]=-74.8934363;  
-waypoints[28][0]=40.5875817; waypoints[28][1]=-74.8936145;  
-waypoints[29][0]=40.588201;  waypoints[29][1]=-74.8938565;  
-waypoints[30][0]=40.5884069; waypoints[30][1]=-74.8939454;  
-
-
-//***********************************************************************88
-
-
-// LCD Startup screen  
-  lcd.begin(16, 2);
-  lcd.print("Autonomous Car ");
-  delay(1000);
-  lcd.clear();
-  if (!SD.begin(chipSelect)) {
-    lcd.print("SD card failed");
-    return;
-  }
- // Serial.println("card initialized.");
-  
-//  Serial.println("Turning on the accelerometer");
-  writeTo(ACC, 0x2D, 0);      
-  writeTo(ACC, 0x2D, 16);
-  writeTo(ACC, 0x2D, 8); 
-  setupgyroscope(2000); // Configure to  - 250, 500 or 2000 deg/sec  
-
-//Set up parameters for GPS
-  Serial1.println(PMTK_SET_NMEA_OUTPUT_RMCONLY);
-  Serial1.println(PMTK_SET_NMEA_UPDATE_5HZ);
-
-// Line marker for SD files  
-  File dataFile = SD.open("datalog.txt", FILE_WRITE);
-  dataFile.println("******************************************************************** ");
-  dataFile.close(); 
-  pinMode(53, OUTPUT); 
-
-// Servos and start up steering check      
-  ser_esc.attach(8);
-  ser_steer.attach(9);
-  delay(2500); //wait for the sensors to be ready 
-  ser_steer.write(1500); delay(100);
-  ser_steer.write(1200); delay(100);
-  ser_steer.write(1500); delay(100);
-  ser_steer.write(1800); delay(100);
-  ser_steer.write(1500); ser_esc.write(1500);
-   
-// Wait for GPS signal to do anything 
-  int i = 0;
-  while (!feedgps()){
-    lcd.setCursor(0,0);
-    lcd.print("Waiting for GPS");
-    lcd.setCursor(i,1);
-    lcd.print(".");
-    i = i++;
-    delay(1000);
-  }
-  lcd.clear();
-  
-// This prints out data to the LCD and waits for a button push to start the car.  This way I can be sure
-// it starts out with good data
-  while(!buttonState == HIGH){
-    buttonState = digitalRead(buttonPin);
-    if (feedgps()){
-      gpsdump(gps,waypoints[0][0],waypoints[0][1]);
-    lcd.setCursor(0,0);
-    lcd.print("Press Button for");
-    lcd.setCursor(0,1);
-    lcd.print("Auto Driving");
-    }
-    delay(100);
-  }
-  
-// Reset to first waypoint just in case  
-  num = 0;
-  
-// Clear LCD for angle/distance data  
-lcd.clear();
+  startup();
+  attachCoreTimerService(timer1);  
 }
-
 void loop()
 {
   bool newdata = false;
@@ -234,6 +130,10 @@ void loop()
       waypoint(localData[7]);
      //Runs TinyGPS only when we have an update. Use the waypoint coordinates for distance and heading calculatons
       gpsdump(gps,WayPT_Lat,WayPT_Lon);
+      
+     // GPS FIFO
+      //gpsAverage();
+gpsSum = 0;      
      }
       
 /*Check to see if there is new GPS data.  Also check to see if the GPS heading has changed (it tends to lag).
@@ -244,6 +144,13 @@ Otherwise estimate the current heading uses only the gyro and past GPS heading.
 */
 
  if (newdata){
+   headingKalmanInit(localData[3]);// initialize with old heading
+   localData[3] = localData[2]; // The new GPS heading is now the previous one
+   localData[2] = headingKalman((millis() - startDt), localData[2], true, (gyroAngles[1]), true); // Gyro in deg/ms
+   startDt = millis();
+   actAngle = localData[2]; //Adding the kalman heading to the angle from the gyro the car has turned since 
+   gyroAngles[0] = 0;
+   /*
      headingKalmanInit(localData[3]);// initialize with old heading
      localData[3] = localData[2]; // The new GPS heading is now the previous one
      localData[2] = headingKalman((millis() - startDt), localData[2], true, (localData[9]), true); // Gyro in deg/ms
@@ -255,12 +162,13 @@ Otherwise estimate the current heading uses only the gyro and past GPS heading.
       getGyroRate();
       localData[9] = gyroAngles[1];  
       actAngle =  localData[4];
+      */
  }
  
  else{ 
      getGyroRate(); // heading is calculated off only the gyro so it always needs to be updated
-     actAngle = localData[4];
-     
+    actAngle = localData[2] + gyroAngles[0];
+
  }   
 // Clamp to 0-360 range
  while (actAngle < 0) actAngle += 360.0;
@@ -310,22 +218,24 @@ Otherwise estimate the current heading uses only the gyro and past GPS heading.
    
 // Drive steering servo 
   driveSteering(-steering);
-
+/*
   for ( int i = 0; i < 12; i = i + 1) {
           Serial.print(localData[i]); Serial.print(" ");
            } 
            Serial.println();
 
-
+*/
 // Print localData array to SD card ////
+if (sdFlag) {
   logger();
-
-// Print to LCD ////
+  // Print to LCD ////
   lcdPrint();
+  sdFlag = 0;
+}
+
 
 //reset gps update value 
   localData[11] = 0; 
-
 
   // *********************** loop timing control **************************
   lastLoopUsefulTime = millis()-loopStartTime;
@@ -336,5 +246,10 @@ Otherwise estimate the current heading uses only the gyro and past GPS heading.
   
 
 }
-
+//core timer interrupt.  This sets the update rate for the sd logging and lcd printing. core_tick_rate = 1ms
+uint32_t timer1(uint32_t currentTime) {
+  sdFlag = 1;
+  gpsFlag = 1;
+  return (currentTime + CORE_TICK_RATE*250);
+}
 
