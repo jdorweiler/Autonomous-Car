@@ -11,16 +11,17 @@ waypoints[4][0]=40.505565;   waypoints[4][1]=-74.433564;
 
 
 //***********************************************************************88
-
+pinMode(7,INPUT); //endoder interrupt on pin 7
 
 // LCD Startup screen  
   lcd.begin(16, 2);
   lcd.print("Autonomous Car ");
-  delay(1000);
+  delay(500);
   lcd.clear();
-  if (!SD.begin(chipSelect)) {
-    lcd.print("SD card failed");
-    return;
+  while (!SD.begin(chipSelect)) {
+    lcd.print("Check SD Card :(");
+    Serial.println("SD CARD");
+    //return;
   }
  // Serial.println("card initialized.");
   
@@ -33,23 +34,24 @@ waypoints[4][0]=40.505565;   waypoints[4][1]=-74.433564;
 //Set up parameters for GPS
   Serial1.println(PMTK_SET_NMEA_OUTPUT_RMCONLY);
   Serial1.println(PMTK_SET_NMEA_UPDATE_5HZ);
-
-// Line marker for SD files  
-  File dataFile = SD.open("datalog.txt", FILE_WRITE);
-  dataFile.println("******************************************************************** ");
-  dataFile.close(); 
-  pinMode(53, OUTPUT); 
-
+  
 // Servos and start up steering check      
-  ser_esc.attach(8);
-  ser_steer.attach(9);
-  delay(2500); //wait for the sensors to be ready 
+  ser_esc.attach(25);
+  ser_steer.attach(27);
+  delay(500); //wait for the sensors to be ready 
   ser_steer.write(1500); delay(100);
   ser_steer.write(1200); delay(100);
   ser_steer.write(1500); delay(100);
   ser_steer.write(1800); delay(100);
   ser_steer.write(1500); ser_esc.write(1500);
-   
+  
+  
+// Line marker for SD files  
+  File dataFile = SD.open("datalog.txt", FILE_WRITE);
+  dataFile.println("******************************************************************** ");
+  dataFile.close(); 
+  pinMode(53, OUTPUT); 
+ 
 // Wait for GPS signal to do anything 
   int i = 0;
   while (!feedgps()){
@@ -64,8 +66,15 @@ waypoints[4][0]=40.505565;   waypoints[4][1]=-74.433564;
   
 // This prints out data to the LCD and waits for a button push to start the car.  This way I can be sure
 // it starts out with good data
-  while(!buttonState == HIGH){
+ while(!buttonState == HIGH){
+    if (Serial.available()) { // If data is available to read,
+    start = Serial.read(); // read it and store it in val
+       if (start == 'H'){
+           break; 
+       }
+    }
     buttonState = digitalRead(buttonPin);
+    if (buttonState == HIGH) {start = 'H';}
     if (feedgps()){
       gpsdump(gps,waypoints[0][0],waypoints[0][1]);
     lcd.setCursor(0,0);
@@ -75,7 +84,6 @@ waypoints[4][0]=40.505565;   waypoints[4][1]=-74.433564;
     }
     delay(100);
   }
-  
 // Reset to first waypoint just in case  
   num = 0;
   
