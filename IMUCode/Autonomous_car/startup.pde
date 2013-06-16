@@ -1,17 +1,23 @@
 void startup() {
+  Serial.println("Start Up");
     // initialize the pushbutton pin as an input:
   pinMode(buttonPin, INPUT);  
-//*****************************************************************  
-waypoints[0][0]=40.505589;  waypoints[0][1]=-74.433531;  
-waypoints[1][0]=40.505658;  waypoints[1][1]=-74.433906;  
-waypoints[2][0]=40.50552;  waypoints[2][1]=-74.433721;  
-waypoints[3][0]=40.505794;  waypoints[3][1]=-74.433838;  
-waypoints[4][0]=40.505565;   waypoints[4][1]=-74.433564;  
+//*************************************  Waypoints        ****************************  
+/* Fubar parking lot
+waypoints[0][0]=40.506125;  waypoints[0][1]=-74.432363;  
+waypoints[1][0]=40.506326;  waypoints[1][1]=-74.43267;  
+waypoints[2][0]=40.506237;  waypoints[2][1]=-74.432766;  
+waypoints[3][0]=40.50614;  waypoints[3][1]=-74.432341;   
+waypoints[4][0]=40.505883;   waypoints[4][1]=-74.432206;  
+*/
 
-
+// school by house
+waypoints[0][0]=40.610524;  waypoints[0][1]=-74.876335;  
+waypoints[1][0]=40.610807;  waypoints[1][1]=-74.876402;  
+waypoints[2][0]=40.610811;  waypoints[2][1]=-74.876714;  
 
 //***********************************************************************88
-pinMode(7,INPUT); //endoder interrupt on pin 7
+//pinMode(7,INPUT); //endoder interrupt on pin 7
 
 // LCD Startup screen  
   lcd.begin(16, 2);
@@ -23,12 +29,8 @@ pinMode(7,INPUT); //endoder interrupt on pin 7
     Serial.println("SD CARD");
     //return;
   }
- // Serial.println("card initialized.");
-  
-//  Serial.println("Turning on the accelerometer");
-  writeTo(ACC, 0x2D, 0);      
-  writeTo(ACC, 0x2D, 16);
-  writeTo(ACC, 0x2D, 8); 
+ Serial.println("card initialized.");
+   
   setupgyroscope(2000); // Configure to  - 250, 500 or 2000 deg/sec  
 
 //Set up parameters for GPS
@@ -37,22 +39,22 @@ pinMode(7,INPUT); //endoder interrupt on pin 7
   
 // Servos and start up steering check      
   ser_esc.attach(25);
-  ser_steer.attach(27);
+  ser_steer.attach(39);
   delay(500); //wait for the sensors to be ready 
   ser_steer.write(1500); delay(100);
   ser_steer.write(1200); delay(100);
   ser_steer.write(1500); delay(100);
   ser_steer.write(1800); delay(100);
-  ser_steer.write(1500); ser_esc.write(1500);
+  ser_steer.write(1500); ser_esc.write(1560);
   
-  
-// Line marker for SD files  
+ /* 
+// Line marker for SD files.  Marks the start of a new run  
   File dataFile = SD.open("datalog.txt", FILE_WRITE);
   dataFile.println("******************************************************************** ");
   dataFile.close(); 
   pinMode(53, OUTPUT); 
- 
-// Wait for GPS signal to do anything 
+ */
+// Sit and wait for GPS signal before we do anything.  Print to LCD 
   int i = 0;
   while (!feedgps()){
     lcd.setCursor(0,0);
@@ -64,8 +66,8 @@ pinMode(7,INPUT); //endoder interrupt on pin 7
   }
   lcd.clear();
   
-// This prints out data to the LCD and waits for a button push to start the car.  This way I can be sure
-// it starts out with good data
+// This prints out data to the LCD and waits for a button push to start the car.  The idea is to give it a bit 
+// of time to collect so GPS data. 
  while(!buttonState == HIGH){
     if (Serial.available()) { // If data is available to read,
     start = Serial.read(); // read it and store it in val
@@ -87,7 +89,7 @@ pinMode(7,INPUT); //endoder interrupt on pin 7
 // Reset to first waypoint just in case  
   num = 0;
   
-// Clear LCD for angle/distance data  
+// Clear LCD to get ready for angle/distance data  
 lcd.clear();
 }
 

@@ -1,5 +1,4 @@
-// TinyGPS library by MIkal Hart, http://arduiniana.org/libraries/tinygps/
-// Adapted to use on the autonomous car
+
 static void gpsdump(TinyGPS &gps, float WayPt_Lat, float WayPt_Lon)
 {
   float flat, flon;
@@ -10,7 +9,7 @@ static void gpsdump(TinyGPS &gps, float WayPt_Lat, float WayPt_Lon)
   localData[4] = localData[2];
   localData[7] = float(gps.distance_between(flat, flon, WayPt_Lat, WayPt_Lon)); //Distance to waypoint
   localData[11] = 1;
-  
+  localData[6] = gps.course_to(flat, flon, WayPt_Lat, WayPt_Lon);// Heading to waypoint is checked less frequently
   if (gpsFlag) 
       {
       localData[6] = gps.course_to(flat, flon, WayPt_Lat, WayPt_Lon);// Heading to waypoint is checked less frequently

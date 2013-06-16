@@ -1,5 +1,6 @@
 // Prints data to the LCD screen
 void lcdPrint() {
+  Serial.println("Start LCD Print");
   lcd.setCursor(0, 0);
   lcd.print(localData[5]); // Kalman heading
   lcd.setCursor(9, 0);
@@ -8,11 +9,11 @@ void lcdPrint() {
   lcd.print(localData[8]); // angleDiff sent to PID
   lcd.setCursor(9,1);
   lcd.print(localData[7]); // Distance in meters
-  
+ /* 
           serialFloatPrint(localData[5]);
           serialFloatPrint(localData[8]);
           serialFloatPrint(localData[7]);
-          
+  */        
   return;
 }
 // Send data to GUI through the Xbee 

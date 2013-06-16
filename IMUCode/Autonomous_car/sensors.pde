@@ -19,19 +19,6 @@ void getGyroRate() {
 return;
 }
 
-float getAccAngle() {
-  float r;
-  int regAddress = 0x32;    //first axis-acceleration-data register on the accelerometer
-  readFrom(ACC, regAddress, TO_READ, buff); //read the acceleration data from the accelerometer  
-   ACC_X = (((int)buff[1]) << 8) | buff[0];
-   ACC_Y = (((int)buff[3])<< 8) | buff[2];
-   ACC_Z = (((int)buff[5]) << 8) | buff[4];
-   //ACC_X = (ACC_X * 0.00402832)*9.8;
-
-
-   return ACC_X, ACC_Z;
-}
-
 //Writes val to address register on device
 void writeTo(int device, byte address, byte val) {
    Wire.beginTransmission(device); //start transmission to device 

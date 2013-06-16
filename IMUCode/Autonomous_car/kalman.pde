@@ -1,4 +1,4 @@
-// Kalman and Matrix libraries are from www.bot-thoughts.com
+// Kalman and Matrix libraries are from www.bot-thoughts.com, http://code.google.com/p/bot-thoughts-ugv/
 #define clamp360(x) ((((x) < 0) ? 360: 0) + fmod((x), 360))
 /*
  * Kalman Filter Setup
@@ -18,13 +18,11 @@ float kfGetX(int i)
     return (i >= 0 && i < 2) ? x[i] : 0xFFFFFFFF;
 }
 
-/** headingKalmanInit
- *
- * initialize x, z, K, and P
- */
+
+//initialize x, z, K, and P
 void headingKalmanInit(float x0)
 {
-    x[0] = x0;
+    x[0] = x0; // initialize state with the heading
     x[1] = 0;
 
     z[0] = 0;
@@ -36,7 +34,6 @@ void headingKalmanInit(float x0)
     P[0] = 1000; P[1] = 0;
     P[2] = 0;    P[3] = 1000;
 }
-
 
 /* headingKalman 
  *
