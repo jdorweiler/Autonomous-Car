@@ -1,5 +1,1 @@
-This is the code for my self driving car (http://www.transistor.io/autonomous-car-summary.html).  Still a work in progress. 
-
-
-Updated the board on the car to a Chipkit Max32.  The code now supports a 16x2 LCD to print out
-heading information.  
+This is the code for my self driving car (http://www.transistor.io/autonomous-car-summary.html).  
