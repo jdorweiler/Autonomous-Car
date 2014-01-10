@@ -1,4 +1,4 @@
-This is the code for my self driving car (www.jddorweiler.appspot.com/car.html).  Still a work in progress. 
+This is the code for my self driving car (http://www.transistor.io/autonomous-car-summary.html).  Still a work in progress. 
 
 
 Updated the board on the car to a Chipkit Max32.  The code now supports a 16x2 LCD to print out
